@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { NextRequest, NextResponse } from 'next/server';
 import { MongoClient, GridFSBucket } from 'mongodb';
 
@@ -17,7 +24,6 @@ if (!url) {
       throw error;
     });
 }
-
 
 export async function GET(req: NextRequest) {
   console.log('mongo-video route hit');
@@ -70,7 +76,26 @@ export async function GET(req: NextRequest) {
     const bucket = new GridFSBucket(db);
     const downloadStream = bucket.openDownloadStream(video._id, { start });
 
-    return downloadStream
+    const readableStream = new ReadableStream({
+      start(controller) {
+        downloadStream.on('data', (chunk) => {
+          controller.enqueue(chunk);
+        });
+
+        downloadStream.on('end', () => {
+          controller.close();
+        });
+
+        downloadStream.on('error', (error) => {
+          controller.error(error);
+        });
+      },
+      cancel() {
+        downloadStream.destroy();
+      }
+    });
+
+    return new Response(readableStream, { headers, status: 206 });
 
   } catch (error: any) {
     console.error('Error in mongo-video route:', error);

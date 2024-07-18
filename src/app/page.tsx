@@ -49,7 +49,7 @@ export default function HomePage() {
   const [productModal, setProductModal] = useState<Product | null>(null);
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const [screenWidth, setScreenWidth] = useState(0);
   const [videoMetadata, setVideoMetadata] = useState<Video>();
   const [productsData, setProductsData] = useState<Product[]>([]);
 
@@ -73,8 +73,11 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (typeof window !== "undefined") {
+      setScreenWidth(window.innerWidth);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
 
   useEffect(() => {
